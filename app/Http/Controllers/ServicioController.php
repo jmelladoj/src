@@ -15,4 +15,12 @@ class ServicioController extends Controller
             'servicios' => $servicios
         ];
     }
+
+    public function crearOactualizar(Request $request){
+        Servicio::updateOrCreate(['id' => $request->servicio_id], ['nombre' => $request->nombre]);
+    }
+
+    public function activarOdesactivar(Request $request){
+        $request->accion == 1 ? Servicio::find($request->id)->delete() : Servicio::withTrashed()->where('id' , $request->id)->restore(); 
+    }
 }

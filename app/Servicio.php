@@ -10,5 +10,6 @@ class Servicio extends Model
     //
     use SoftDeletes;
 
+    protected $fillable = ['nombre'];
     protected $dates = ['deleted_at'];
 }

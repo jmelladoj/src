@@ -7,6 +7,7 @@
 require('./bootstrap');
 
 window.Vue = require('vue');
+window.Swal = require('sweetalert2');
 
 /**
  * The following block of code may be used to automatically register your
@@ -19,7 +20,7 @@ window.Vue = require('vue');
 // const files = require.context('./', true, /\.vue$/i);
 // files.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], files(key).default));
 
-import BootstrapVue from "bootstrap-vue";
+import BootstrapVue from 'bootstrap-vue';
 import { ValidationProvider, extend, ValidationObserver } from 'vee-validate';
 import * as rules from 'vee-validate/dist/rules';
 import es from 'vee-validate/dist/locale/es';
@@ -54,3 +55,5 @@ const app = new Vue({
         reservar: 0
     }
 });
+
+

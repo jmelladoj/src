@@ -95,17 +95,20 @@
                                 </template>
 
                                 <template slot="acciones" slot-scope="row">
-                                    <b-button size="xs" v-b-tooltip.hover title="Actualizar información de servicio" @click="abrirModal(2, row.item)" class="btn btn-warning">
+                                    <b-button size="xs" v-b-tooltip.hover.left title="Agregar productos al servicio" class="btn btn-success">
+                                        <i class="fa fa-plus"></i>
+                                    </b-button>
+
+                                    <b-button size="xs" v-b-tooltip.hover.left title="Actualizar información de servicio" @click="abrirModal(2, row.item)" class="btn btn-warning">
                                         <i class="fa fa-pencil"></i>
                                     </b-button>
 
-
                                     <template>
-                                        <b-button v-if="row.item.deleted_at" size="xs" v-b-tooltip.hover title="Restaurar servicio" @click="borrarOrestaurar(row.item.id, 2)" class="btn btn-warning">
+                                        <b-button v-if="row.item.deleted_at" size="xs" v-b-tooltip.hover.left title="Restaurar servicio" @click="activarOdesactivar(row.item.id, 2)" class="btn btn-warning">
                                             <i class="fa fa-undo"></i>
                                         </b-button>
 
-                                        <b-button v-else size="xs" v-b-tooltip.hover title="Eliminar servicio" @click="borrarOrestaurar(row.item.id, 1)"  class="btn btn-danger">
+                                        <b-button v-else size="xs" v-b-tooltip.hover.left title="Eliminar servicio" @click="activarOdesactivar(row.item.id, 1)"  class="btn btn-danger">
                                             <i class="fa fa-trash"></i>
                                         </b-button>
                             
@@ -202,6 +205,14 @@
                 this.totalRows = filteredItems.length
                 this.currentPage = 1
             },
+            mensaje(clase, mensaje) {
+                Swal.fire({
+                    type: clase,
+                    title: mensaje,
+                    showConfirmButton: true,
+                    timer: 2000
+                });
+            },
             listarServicios (){
                 let me=this;
                 axios.get('/servicios/administrador').then(function (response) {
@@ -214,34 +225,24 @@
             },
             crearOactualizar(accion){
                 let me = this;
+                var mensaje = me.modal_servicio.accion == 1 ? 'Registro agregado exitosamente' : 'Registro actualizado exitosamente';
 
-                this.$validator.validateAll('modal_ciudad').then(valido => {
-                    if (valido) {
-        
-
-                        var url = accion == 1 ? '/ciudad/crear' : '/ciudad/actualizar';
-                        axios.post(url,{
-                            'ciudad_id': me.ciudad.id,
-                            'nombre': me.ciudad.nombre
-                        }).then(function (response) {
-                            me.listarServicios();
-                            me.cerrarModal();
-                            var mensaje = me.modal_servicio.accion == 1 ? 'Registro agregado exitosamente' : 'Registro actualizado exitosamente';
-                            swal.fire({
-                                type: 'success',
-                                title: mensaje,
-                                showConfirmButton: false,
-                                timer: 2000
-                            })
-                        }).catch(function (error) {
-                            console.error(error);
-                        });
-                    }
-                })
+                axios.post('/servicio/crear/actualizar',{
+                    'servicio_id': me.servicio.id,
+                    'nombre': me.servicio.nombre.toUpperCase()
+                }).then(function (response) {
+                    me.limpiarDatosServicio();
+                    me.listarServicios();
+                    me.cerrarModal();
+                    me.mensaje('success', mensaje);
+                }).catch(function (error) {
+                    console.error(error);
+                }); 
             },
-            borrarOrestaurar(id, accion){
-                var mensaje = accion == 2 ? '¿Deseas restaurar la Ciudad?' : '¿Deseas borrar la Ciudad?';
-                swal.fire({
+            activarOdesactivar(id, accion){
+                var mensaje = accion == 2 ? '¿Deseas restaurar el servicio?' : '¿Deseas borrar el servicio?';
+                var mensaje_dos = accion == 2 ? 'El servicio ha sido restaurad0!' : 'El servicio ha sido quitado!';
+                Swal.fire({
                     title: mensaje,
                     type: 'warning',
                     showCancelButton: true,
@@ -255,17 +256,13 @@
                     if (result.value) {
                         let me = this;
 
-                        axios.post('/ciudad/borrar',{
-                            'id': id
+                        axios.post('/servicio/activar/desactivar',{
+                            'id': id,
+                            'accion': accion
                         }).then(function (response) {
-                            var mensaje_dos = accion == 2 ? 'La Ciudad ha sido restaurada!' : 'La Ciudad ha sido quitada!';
-                            me.limpiarDatos();
+                            me.limpiarDatosServicio();
                             me.listarServicios();
-                            swal.fire(
-                                mensaje_dos,
-                                'El registro ha sido actualizado con éxito.',
-                                'success'
-                            )
+                            me.mensaje('success', mensaje_dos);
                         }).catch(function (error) {
                             console.log(error);
                         });
@@ -273,12 +270,10 @@
                 })
             },
             cerrarModal(){
-  
                 this.modal_servicio.titulo = "";
                 this.modal_servicio.accion = 0;
                 this.limpiarDatosServicio();
                 this.$refs['modal_servicio'].hide();
-
             },
             abrirModal(accion, data = []){
                 let me = this;
