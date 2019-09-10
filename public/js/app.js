@@ -1999,6 +1999,61 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 var items = [];
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
@@ -2008,6 +2063,7 @@ var items = [];
         nombre: ''
       },
       producto: {
+        id: 0,
         nombre: '',
         sesiones: ''
       },
@@ -2015,7 +2071,12 @@ var items = [];
         titulo: '',
         accion: 0
       },
+      modal_producto: {
+        titulo: '',
+        accion: 1
+      },
       items: items,
+      productos: [],
       fields: [{
         key: 'index',
         label: '#',
@@ -2031,6 +2092,19 @@ var items = [];
         key: 'acciones',
         label: 'ACCIONES',
         sortable: true,
+        "class": 'text-center'
+      }],
+      campos: [{
+        key: 'index',
+        label: '#',
+        "class": 'text-center'
+      }, {
+        key: 'nombre',
+        label: 'NOMBRE',
+        "class": 'text-left'
+      }, {
+        key: 'acciones',
+        label: 'ACCIONES',
         "class": 'text-center'
       }],
       currentPage: 1,
@@ -2077,16 +2151,42 @@ var items = [];
         console.log(error.response.data);
       });
     },
-    crearOactualizar: function crearOactualizar(accion) {
+    listarProductos: function listarProductos(id) {
       var me = this;
-      var mensaje = me.modal_servicio.accion == 1 ? 'Registro agregado exitosamente' : 'Registro actualizado exitosamente';
+      me.productos = [];
+      axios.get('/servicio/' + id).then(function (response) {
+        me.productos = response.data.productos;
+      })["catch"](function (error) {
+        console.log(error.response.data);
+      });
+    },
+    crearOactualizarServicio: function crearOactualizarServicio(accion) {
+      var me = this;
+      var mensaje = accion == 1 ? 'Registro agregado exitosamente' : 'Registro actualizado exitosamente';
       axios.post('/servicio/crear/actualizar', {
         'servicio_id': me.servicio.id,
         'nombre': me.servicio.nombre.toUpperCase()
       }).then(function (response) {
         me.limpiarDatosServicio();
         me.listarServicios();
-        me.cerrarModal();
+        me.cerrarModalServicio();
+        me.mensaje('success', mensaje);
+      })["catch"](function (error) {
+        console.error(error);
+      });
+    },
+    crearOactualizarProducto: function crearOactualizarProducto(accion) {
+      var me = this;
+      var mensaje = accion == 1 ? 'Registro agregado exitosamente' : 'Registro actualizado exitosamente';
+      axios.post('/producto/crear/actualizar', {
+        'producto_id': me.producto.id,
+        'nombre': me.producto.nombre.toUpperCase(),
+        'sesiones': me.producto.sesiones,
+        'servicio_id': me.servicio.id
+      }).then(function (response) {
+        me.limpiarDatosProducto();
+        me.listarProductos(me.servicio.id);
+        me.$refs.observer_producto.reset();
         me.mensaje('success', mensaje);
       })["catch"](function (error) {
         console.error(error);
@@ -2123,13 +2223,48 @@ var items = [];
         } else if (result.dismiss === swal.DismissReason.cancel) {}
       });
     },
-    cerrarModal: function cerrarModal() {
+    eliminarProducto: function eliminarProducto(id) {
+      var _this2 = this;
+
+      Swal.fire({
+        title: '¿Deseas borrar el producto?',
+        type: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Aceptar!',
+        cancelButtonText: 'Cancelar',
+        confirmButtonClass: 'btn btn-success',
+        cancelButtonClass: 'btn btn-danger'
+      }).then(function (result) {
+        if (result.value) {
+          var me = _this2;
+          axios.post('/producto/eliminar', {
+            'id': id
+          }).then(function (response) {
+            me.listarProductos(me.servicio.id);
+            me.mensaje('success', 'El producto ha sido quitado!');
+          })["catch"](function (error) {
+            console.log(error);
+          });
+        } else if (result.dismiss === swal.DismissReason.cancel) {}
+      });
+    },
+    cerrarModalServicio: function cerrarModalServicio() {
       this.modal_servicio.titulo = "";
       this.modal_servicio.accion = 0;
       this.limpiarDatosServicio();
       this.$refs['modal_servicio'].hide();
     },
-    abrirModal: function abrirModal(accion) {
+    cerrarModalProducto: function cerrarModalProducto() {
+      this.modal_producto.titulo = "";
+      this.modal_producto.accion = 0;
+      this.productos = [];
+      this.servicio.id = 0;
+      this.limpiarDatosProducto();
+      this.$refs['modal_producto'].hide();
+    },
+    abrirModalServicio: function abrirModalServicio(accion) {
       var data = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
       var me = this;
 
@@ -2145,9 +2280,32 @@ var items = [];
 
       this.$refs['modal_servicio'].show();
     },
+    abrirModalProducto: function abrirModalProducto() {
+      var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+      var me = this;
+      me.modal_producto.titulo = "Productos del Servicio: " + data['nombre'];
+      me.servicio.id = data['id'];
+      this.listarProductos(me.servicio.id);
+      this.$refs['modal_producto'].show();
+    },
+    cargarProducto: function cargarProducto() {
+      var data = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : [];
+      var me = this;
+      me.producto.id = data['id'];
+      me.producto.nombre = data['nombre'];
+      me.producto.sesiones = data['cantidad_sesiones'];
+      me.modal_producto.accion = 2;
+      me.$refs.observer_producto.valid = true;
+    },
     limpiarDatosServicio: function limpiarDatosServicio() {
       this.servicio.id = 0;
       this.servicio.nombre = '';
+    },
+    limpiarDatosProducto: function limpiarDatosProducto() {
+      this.producto.id = 0;
+      this.producto.nombre = '';
+      this.producto.sesiones = '';
+      this.modal_producto.accion = 1;
     }
   },
   mounted: function mounted() {
@@ -34631,7 +34789,7 @@ exports = module.exports = __webpack_require__(/*! ../../../node_modules/css-loa
 
 
 // module
-exports.push([module.i, "\n.modal-content{\n    width: 100% !important;\n    position: absolute !important;\n}\n.modal-body{\n    max-height: calc(100vh - 200px);\n    overflow-y: auto;\n}\n.modal-lg{\n    max-width: 90%;\n}\n.form-group{\n    margin-bottom: 5px;\n}\n.custom-file-input:lang(en) ~ .custom-file-label::after {\n    content: 'Buscar';\n}\n.btn-file {\n    position: relative;\n    overflow: hidden;\n}\n.btn-file input[type=file] {\n    position: absolute;\n    top: 0;\n    right: 0;\n    min-width: 100%;\n    min-height: 100%;\n    font-size: 100px;\n    text-align: right;\n    filter: alpha(opacity=0);\n    opacity: 0;\n    outline: none;   \n    cursor: inherit;\n    display: block;\n}\n.btn-bottom{\n    bottom: 0;\n    position: absolute;\n}\n.btn-block {\n    width: 90%;\n}\n.btn-block-modal {\n    width: 100%;\n}\n.tabla-altura {\n    max-height: 325px;\n}\n\n", ""]);
+exports.push([module.i, "\n.modal-content{\n    width: 100% !important;\n    position: absolute !important;\n}\n.modal-body{\n    max-height: calc(100vh - 200px);\n    overflow-y: auto;\n}\n.page-titles .breadcrumb {\n    padding-left: 30px;\n}\n", ""]);
 
 // exports
 
@@ -72231,7 +72389,7 @@ var render = function() {
                         attrs: { title: "Agrega un servicio a la plataforma" },
                         on: {
                           click: function($event) {
-                            return _vm.abrirModal(1)
+                            return _vm.abrirModalServicio(1)
                           }
                         }
                       },
@@ -72587,6 +72745,13 @@ var render = function() {
                                                 size: "xs",
                                                 title:
                                                   "Agregar productos al servicio"
+                                              },
+                                              on: {
+                                                click: function($event) {
+                                                  return _vm.abrirModalProducto(
+                                                    row.item
+                                                  )
+                                                }
                                               }
                                             },
                                             [
@@ -72618,7 +72783,7 @@ var render = function() {
                                               },
                                               on: {
                                                 click: function($event) {
-                                                  return _vm.abrirModal(
+                                                  return _vm.abrirModalServicio(
                                                     2,
                                                     row.item
                                                   )
@@ -72813,7 +72978,6 @@ var render = function() {
                               { attrs: { label: "Nombre de Servicio" } },
                               [
                                 _c("ValidationProvider", {
-                                  ref: "validar",
                                   attrs: {
                                     name: "nombre",
                                     rules: "required|min:3|alpha_spaces",
@@ -72902,7 +73066,7 @@ var render = function() {
                                 },
                                 on: {
                                   click: function($event) {
-                                    return _vm.crearOactualizar(1)
+                                    return _vm.crearOactualizarServicio(1)
                                   }
                                 }
                               },
@@ -72923,7 +73087,7 @@ var render = function() {
                                 attrs: { size: "md", variant: "warning" },
                                 on: {
                                   click: function($event) {
-                                    return _vm.crearOactualizar(2)
+                                    return _vm.crearOactualizarServicio(2)
                                   }
                                 }
                               },
@@ -72936,7 +73100,455 @@ var render = function() {
                                 attrs: { size: "md", variant: "danger" },
                                 on: {
                                   click: function($event) {
-                                    return _vm.cerrarModal()
+                                    return _vm.cerrarModalServicio()
+                                  }
+                                }
+                              },
+                              [_vm._v(" Cerrar ")]
+                            )
+                          ],
+                          1
+                        )
+                      ],
+                      2
+                    )
+                  ]
+                }
+              }
+            ])
+          }),
+          _vm._v(" "),
+          _c("ValidationObserver", {
+            ref: "observer_producto",
+            attrs: { tag: "form" },
+            scopedSlots: _vm._u([
+              {
+                key: "default",
+                fn: function(ref) {
+                  var valid = ref.valid
+                  return [
+                    _c(
+                      "b-modal",
+                      {
+                        ref: "modal_producto",
+                        attrs: {
+                          title: _vm.modal_producto.titulo,
+                          "no-close-on-backdrop": "",
+                          size: "lg"
+                        }
+                      },
+                      [
+                        _c(
+                          "b-form",
+                          [
+                            _c(
+                              "b-form-group",
+                              [
+                                _c(
+                                  "b-row",
+                                  [
+                                    _c(
+                                      "b-col",
+                                      { attrs: { lg: "4", sm: "4" } },
+                                      [
+                                        _c("ValidationProvider", {
+                                          attrs: {
+                                            name: "nombre",
+                                            rules:
+                                              "required|min:3|alpha_spaces",
+                                            bails: false
+                                          },
+                                          scopedSlots: _vm._u(
+                                            [
+                                              {
+                                                key: "default",
+                                                fn: function(ref) {
+                                                  var errors = ref.errors
+                                                  return [
+                                                    _c("b-form-input", {
+                                                      attrs: {
+                                                        type: "text",
+                                                        placeholder: "Nombre"
+                                                      },
+                                                      model: {
+                                                        value:
+                                                          _vm.producto.nombre,
+                                                        callback: function(
+                                                          $$v
+                                                        ) {
+                                                          _vm.$set(
+                                                            _vm.producto,
+                                                            "nombre",
+                                                            $$v
+                                                          )
+                                                        },
+                                                        expression:
+                                                          "producto.nombre"
+                                                      }
+                                                    }),
+                                                    _vm._v(" "),
+                                                    _c(
+                                                      "b-alert",
+                                                      {
+                                                        attrs: {
+                                                          variant: "danger",
+                                                          show:
+                                                            errors.length > 0
+                                                        }
+                                                      },
+                                                      _vm._l(errors, function(
+                                                        error,
+                                                        index
+                                                      ) {
+                                                        return _c("label", {
+                                                          key: index,
+                                                          attrs: { for: "" },
+                                                          domProps: {
+                                                            textContent: _vm._s(
+                                                              "* " + error
+                                                            )
+                                                          }
+                                                        })
+                                                      }),
+                                                      0
+                                                    )
+                                                  ]
+                                                }
+                                              }
+                                            ],
+                                            null,
+                                            true
+                                          )
+                                        })
+                                      ],
+                                      1
+                                    ),
+                                    _vm._v(" "),
+                                    _c(
+                                      "b-col",
+                                      { attrs: { lg: "4", sm: "4" } },
+                                      [
+                                        _c("ValidationProvider", {
+                                          attrs: {
+                                            name: "sesiones",
+                                            rules:
+                                              "required|numeric|min_value:1",
+                                            bails: false
+                                          },
+                                          scopedSlots: _vm._u(
+                                            [
+                                              {
+                                                key: "default",
+                                                fn: function(ref) {
+                                                  var errors = ref.errors
+                                                  return [
+                                                    _c("b-form-input", {
+                                                      attrs: {
+                                                        type: "number",
+                                                        placeholder: "Sesiones"
+                                                      },
+                                                      model: {
+                                                        value:
+                                                          _vm.producto.sesiones,
+                                                        callback: function(
+                                                          $$v
+                                                        ) {
+                                                          _vm.$set(
+                                                            _vm.producto,
+                                                            "sesiones",
+                                                            $$v
+                                                          )
+                                                        },
+                                                        expression:
+                                                          "producto.sesiones"
+                                                      }
+                                                    }),
+                                                    _vm._v(" "),
+                                                    _c(
+                                                      "b-alert",
+                                                      {
+                                                        attrs: {
+                                                          variant: "danger",
+                                                          show:
+                                                            errors.length > 0
+                                                        }
+                                                      },
+                                                      _vm._l(errors, function(
+                                                        error,
+                                                        index
+                                                      ) {
+                                                        return _c("label", {
+                                                          key: index,
+                                                          attrs: { for: "" },
+                                                          domProps: {
+                                                            textContent: _vm._s(
+                                                              "* " + error
+                                                            )
+                                                          }
+                                                        })
+                                                      }),
+                                                      0
+                                                    )
+                                                  ]
+                                                }
+                                              }
+                                            ],
+                                            null,
+                                            true
+                                          )
+                                        })
+                                      ],
+                                      1
+                                    ),
+                                    _vm._v(" "),
+                                    _c(
+                                      "b-col",
+                                      {
+                                        directives: [
+                                          {
+                                            name: "show",
+                                            rawName: "v-show",
+                                            value:
+                                              _vm.modal_producto.accion == 1,
+                                            expression:
+                                              "modal_producto.accion == 1"
+                                          }
+                                        ],
+                                        attrs: { lg: "4", sm: "4" }
+                                      },
+                                      [
+                                        _c(
+                                          "b-button",
+                                          {
+                                            staticClass: "btn-block",
+                                            attrs: {
+                                              disabled: !valid,
+                                              variant: "success"
+                                            },
+                                            on: {
+                                              click: function($event) {
+                                                return _vm.crearOactualizarProducto(
+                                                  1
+                                                )
+                                              }
+                                            }
+                                          },
+                                          [_vm._v(" Guardar ")]
+                                        )
+                                      ],
+                                      1
+                                    ),
+                                    _vm._v(" "),
+                                    _c(
+                                      "b-col",
+                                      {
+                                        directives: [
+                                          {
+                                            name: "show",
+                                            rawName: "v-show",
+                                            value:
+                                              _vm.modal_producto.accion == 2,
+                                            expression:
+                                              "modal_producto.accion == 2"
+                                          }
+                                        ],
+                                        attrs: { lg: "4", sm: "4" }
+                                      },
+                                      [
+                                        _c(
+                                          "b-button",
+                                          {
+                                            staticClass: "btn-block",
+                                            attrs: { variant: "warning" },
+                                            on: {
+                                              click: function($event) {
+                                                return _vm.crearOactualizarProducto(
+                                                  2
+                                                )
+                                              }
+                                            }
+                                          },
+                                          [_vm._v(" Actualizar ")]
+                                        )
+                                      ],
+                                      1
+                                    )
+                                  ],
+                                  1
+                                )
+                              ],
+                              1
+                            ),
+                            _vm._v(" "),
+                            _c(
+                              "b-form-group",
+                              [
+                                _c(
+                                  "b-table",
+                                  {
+                                    attrs: {
+                                      "show-empty": "",
+                                      responsive: "",
+                                      striped: "",
+                                      borderless: "",
+                                      outlined: "",
+                                      small: "",
+                                      hover: "",
+                                      items: _vm.productos,
+                                      fields: _vm.campos
+                                    },
+                                    scopedSlots: _vm._u(
+                                      [
+                                        {
+                                          key: "index",
+                                          fn: function(data) {
+                                            return [
+                                              _vm._v(
+                                                "\n                                " +
+                                                  _vm._s(data.index + 1) +
+                                                  "\n                            "
+                                              )
+                                            ]
+                                          }
+                                        },
+                                        {
+                                          key: "acciones",
+                                          fn: function(row) {
+                                            return [
+                                              _c(
+                                                "b-button",
+                                                {
+                                                  directives: [
+                                                    {
+                                                      name: "b-tooltip",
+                                                      rawName:
+                                                        "v-b-tooltip.hover.left",
+                                                      modifiers: {
+                                                        hover: true,
+                                                        left: true
+                                                      }
+                                                    }
+                                                  ],
+                                                  staticClass:
+                                                    "btn btn-warning",
+                                                  attrs: {
+                                                    size: "xs",
+                                                    title:
+                                                      "Actualizar información de producto"
+                                                  },
+                                                  on: {
+                                                    click: function($event) {
+                                                      return _vm.cargarProducto(
+                                                        row.item
+                                                      )
+                                                    }
+                                                  }
+                                                },
+                                                [
+                                                  _c("i", {
+                                                    staticClass: "fa fa-pencil"
+                                                  })
+                                                ]
+                                              ),
+                                              _vm._v(" "),
+                                              _c(
+                                                "b-button",
+                                                {
+                                                  directives: [
+                                                    {
+                                                      name: "b-tooltip",
+                                                      rawName:
+                                                        "v-b-tooltip.hover.left",
+                                                      modifiers: {
+                                                        hover: true,
+                                                        left: true
+                                                      }
+                                                    }
+                                                  ],
+                                                  staticClass: "btn btn-danger",
+                                                  attrs: {
+                                                    size: "xs",
+                                                    title: "Eliminar producto"
+                                                  },
+                                                  on: {
+                                                    click: function($event) {
+                                                      return _vm.eliminarProducto(
+                                                        row.item.id
+                                                      )
+                                                    }
+                                                  }
+                                                },
+                                                [
+                                                  _c("i", {
+                                                    staticClass: "fa fa-trash"
+                                                  })
+                                                ]
+                                              )
+                                            ]
+                                          }
+                                        }
+                                      ],
+                                      null,
+                                      true
+                                    )
+                                  },
+                                  [
+                                    _c(
+                                      "template",
+                                      { slot: "empty" },
+                                      [
+                                        _c("center", [
+                                          _c("h5", [
+                                            _vm._v(
+                                              "No hay registros para mostrar."
+                                            )
+                                          ])
+                                        ])
+                                      ],
+                                      1
+                                    )
+                                  ],
+                                  2
+                                )
+                              ],
+                              1
+                            )
+                          ],
+                          1
+                        ),
+                        _vm._v(" "),
+                        _c(
+                          "template",
+                          { slot: "modal-footer" },
+                          [
+                            _c(
+                              "b-button",
+                              {
+                                directives: [
+                                  {
+                                    name: "show",
+                                    rawName: "v-show",
+                                    value: _vm.modal_producto.accion == 2,
+                                    expression: "modal_producto.accion == 2"
+                                  }
+                                ],
+                                attrs: { size: "md", variant: "success" },
+                                on: {
+                                  click: function($event) {
+                                    return _vm.limpiarDatosProducto()
+                                  }
+                                }
+                              },
+                              [_vm._v(" Agregar ")]
+                            ),
+                            _vm._v(" "),
+                            _c(
+                              "b-button",
+                              {
+                                attrs: { size: "md", variant: "danger" },
+                                on: {
+                                  click: function($event) {
+                                    return _vm.cerrarModalProducto()
                                   }
                                 }
                               },

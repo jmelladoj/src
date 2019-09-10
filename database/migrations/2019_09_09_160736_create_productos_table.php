@@ -17,6 +17,10 @@ class CreateProductosTable extends Migration
             $table->bigIncrements('id');
             $table->string('nombre');
             $table->integer('cantidad_sesiones');
+
+            $table->unsignedBigInteger('servicio_id');
+            $table->foreign('servicio_id')->references('id')->on('servicios');
+
             $table->softDeletes();
             $table->timestamps();
         });
